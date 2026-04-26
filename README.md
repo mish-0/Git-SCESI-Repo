@@ -158,7 +158,7 @@ Vas a tu perfil en GitHub, entras a la pestaña de repositorios y clickeas en "N
 
 ### Conectar un repo local con GitHub
 
-Si ya tienes un repo local inicializado y con al menos un commit, podés vincularlo a GitHub con:
+Si ya tienes un repo local inicializado y con al menos un commit, puedes vincularlo a GitHub con:
 
 ```bash
 git remote add origin git@github.com:TuUser/TuRepo.git
@@ -201,3 +201,101 @@ Para traer los cambios que alguien más subió (o los que subiste desde otra PC)
 ```bash
 git pull origin <rama>
 ```
+
+## Clase 4 - Remote, SSH Múltiple y Checkout
+
+### git remote
+
+`git remote` es el comando para gestionar a dónde apunta tu repo local cuando quieres enviar o recibir cambios. Lo más útil que puedes hacer con él es ver la URL actual, vincular un repo nuevo o cambiar la URL si te equivocaste.
+
+```bash
+git remote -v                          # muestra a dónde apunta
+git remote add <apodo> "url"           # vincula con un repo remoto
+git remote set-url <apodo> "url"       # cambia la URL
+```
+
+## Múltiples SSH
+
+Si tienes más de una cuenta de GitHub, necesitas una clave SSH distinta para cada una. La idea es que cada cuenta tenga su propio "túnel" de acceso, porque si usas la misma llave para todo, las cuentas se confunden entre sí.
+
+## Cómo configurar múltiples SSH
+
+Primero generas la nueva clave con un nombre diferente para no pisar la que ya tienes:
+
+```bash
+ssh-keygen -t ed25519 -C "micorreo@gmail.com" -f ~/.ssh/id_miname
+```
+
+Después creas un archivo `config` dentro de `~/.ssh/` para que GIT sepa qué llave usar para cada cuenta:
+
+```
+# Cuenta personal
+Host github.com
+  HostName github.com
+  User git
+  IdentityFile ~/.ssh/id_ed25519
+
+# Segunda cuenta
+Host github-miname
+  HostName github.com
+  User git
+  IdentityFile ~/.ssh/id_miname
+```
+
+Para verificar que funciona:
+
+```bash
+ssh -T git@github-miname
+```
+
+Cada campo del config sirve para algo específico. `Host` es el apodo que le pones a esa conexión, el que escribes después de `git@`. `HostName` es la dirección real del servidor, que siempre va a ser `github.com`. `User` es siempre `git` para GitHub. `IdentityFile` es la ruta a la llave privada que corresponde a ese host.
+
+Importante: si clonas un repo con la segunda cuenta, tienes que usar el alias que definiste en el config, no el dominio normal:
+
+```bash
+git clone git@github-miname:usuario/repo.git
+```
+
+## Configuraciones locales
+
+Las configuraciones que hicimos en la clase 1 con `--global` aplican para todos los repos de tu computadora. Pero si necesitas usar otro nombre o correo solo en un repo específico, puedes hacer una configuración local que pisa a la global sin tocarla:
+
+```bash
+git config user.name "Otro Nombre"
+git config user.email "otro@correo.com"
+```
+
+La diferencia es simplemente que no lleva el flag `--global`, y solo afecta al repo donde estés parado.
+
+## Git Checkout
+
+`git checkout` mueve el HEAD, que vendría a ser el puntero que indica en qué punto del historial estás parado. Sirve para varias cosas: revisar cómo era el código en un commit viejo, recuperar algo que borraste, probar cosas sin tocar la rama principal, o simplemente cambiar de rama.
+
+## Detached HEAD
+
+Normalmente el HEAD apunta a una rama, que va avanzando cada vez que haces un commit. Pero cuando haces checkout a un commit específico, el HEAD queda apuntando directo a ese commit, suelto, sin rama. A eso se le llama estado "Detached HEAD". Es como estar de visita en el pasado: puedes ver todo, incluso hacer cambios, pero si te vas sin crear una rama nueva, lo que hiciste desaparece.
+
+## Cómo moverse entre commits
+
+Para ir a un commit antiguo necesitas su hash (lo ves con `git log`):
+
+```bash
+git checkout <hash_antiguo>
+```
+
+Para volver al presente:
+
+```bash
+git checkout <rama>
+```
+
+Si mientras estabas en Detached HEAD hiciste algún commit y no quieres perderlo, tienes que crear una rama nueva antes de volver:
+
+```bash
+git checkout <hash_del_commit_nuevo>
+git checkout -b rama_nueva
+```
+
+## Buenas prácticas con checkout
+
+Antes de hacer checkout a un commit viejo, asegurate de tener todo commiteado. Si tienes cambios sin guardar GIT no te va a dejar moverte. Tampoco conviene quedarse mucho tiempo en Detached HEAD haciendo cambios; si vas a trabajar en serio, mejor crea una rama desde el principio. Por otro lado, es una herramienta muy útil para estudiar proyectos grandes y ver cómo fueron creciendo commit a commit.
