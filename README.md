@@ -214,11 +214,11 @@ git remote add <apodo> "url"           # vincula con un repo remoto
 git remote set-url <apodo> "url"       # cambia la URL
 ```
 
-## Múltiples SSH
+### Múltiples SSH
 
 Si tienes más de una cuenta de GitHub, necesitas una clave SSH distinta para cada una. La idea es que cada cuenta tenga su propio "túnel" de acceso, porque si usas la misma llave para todo, las cuentas se confunden entre sí.
 
-## Cómo configurar múltiples SSH
+### Cómo configurar múltiples SSH
 
 Primero generas la nueva clave con un nombre diferente para no pisar la que ya tienes:
 
@@ -256,7 +256,7 @@ Importante: si clonas un repo con la segunda cuenta, tienes que usar el alias qu
 git clone git@github-miname:usuario/repo.git
 ```
 
-## Configuraciones locales
+### Configuraciones locales
 
 Las configuraciones que hicimos en la clase 1 con `--global` aplican para todos los repos de tu computadora. Pero si necesitas usar otro nombre o correo solo en un repo específico, puedes hacer una configuración local que pisa a la global sin tocarla:
 
@@ -267,15 +267,15 @@ git config user.email "otro@correo.com"
 
 La diferencia es simplemente que no lleva el flag `--global`, y solo afecta al repo donde estés parado.
 
-## Git Checkout
+### Git Checkout
 
 `git checkout` mueve el HEAD, que vendría a ser el puntero que indica en qué punto del historial estás parado. Sirve para varias cosas: revisar cómo era el código en un commit viejo, recuperar algo que borraste, probar cosas sin tocar la rama principal, o simplemente cambiar de rama.
 
-## Detached HEAD
+### Detached HEAD
 
 Normalmente el HEAD apunta a una rama, que va avanzando cada vez que haces un commit. Pero cuando haces checkout a un commit específico, el HEAD queda apuntando directo a ese commit, suelto, sin rama. A eso se le llama estado "Detached HEAD". Es como estar de visita en el pasado: puedes ver todo, incluso hacer cambios, pero si te vas sin crear una rama nueva, lo que hiciste desaparece.
 
-## Cómo moverse entre commits
+### Cómo moverse entre commits
 
 Para ir a un commit antiguo necesitas su hash (lo ves con `git log`):
 
@@ -296,6 +296,65 @@ git checkout <hash_del_commit_nuevo>
 git checkout -b rama_nueva
 ```
 
-## Buenas prácticas con checkout
+### Buenas prácticas con checkout
 
 Antes de hacer checkout a un commit viejo, asegurate de tener todo commiteado. Si tienes cambios sin guardar GIT no te va a dejar moverte. Tampoco conviene quedarse mucho tiempo en Detached HEAD haciendo cambios; si vas a trabajar en serio, mejor crea una rama desde el principio. Por otro lado, es una herramienta muy útil para estudiar proyectos grandes y ver cómo fueron creciendo commit a commit.
+
+
+## Clase 5 - Ramas y GitFlow Básico
+
+### Actualización del sistema de calificación
+
+El auxi actualizó algunos puntos del sistema de notas. Ahora el README propio vale 5 pts por separado, la asistencia bajó a 8 pts (sigue siendo 1 pt por clase), y el form del 19 de abril subió a 2 pts. La entrega del trabajo individual también cambió: ahora es el viernes 1 de mayo hasta las 21:30.
+
+### ¿Qué son las ramas?
+
+Una rama es básicamente una línea de desarrollo paralela. Cuando creas una rama, estás partiendo desde el estado actual del código y trabajando en un camino separado sin afectar el resto. Es como tener una copia del proyecto donde puedes hacer cambios tranquilo, y después decides si esos cambios se unen al código principal o no.
+
+### git branch
+
+Con `git branch` puedes gestionar todas las ramas de tu repo.
+
+```bash
+git branch              # lista todas las ramas y muestra en cuál estás
+git branch <rama>       # crea una rama nueva desde donde estás parado
+git branch -D <rama>    # borra una rama
+```
+
+### git checkout y git switch con ramas
+
+Ya vimos `git checkout` para moverse entre commits. También funciona para ramas:
+
+```bash
+git checkout <rama>      # te mueves a esa rama
+git checkout -b <rama>   # crea la rama y te mueves a ella en un solo paso
+```
+
+Eso sí, para cambiar de rama no puedes tener archivos en modified, untracked o staged sin commitear.
+
+En 2019 con Git 2.23 introdujeron `git switch`, que hace lo mismo pero solo para ramas, sin el riesgo de terminar en Detached HEAD por error. `git checkout` sigue siendo el clásico que sirve para todo (ramas, commits, archivos), mientras que `git switch` es más específico y seguro para moverse entre ramas.
+
+### GitFlow básico
+
+GitFlow es una forma ordenada de organizar las ramas de un proyecto. Sin una convención así, cada uno nombra sus ramas como quiere y el historial se vuelve un caos. Con GitFlow todos saben qué tipo de trabajo va en qué rama.
+
+### Cómo funciona GitFlow
+
+Hay dos ramas principales que viven para siempre en el proyecto. `main` contiene el código en producción, lo que está funcionando para los usuarios. `develop` es donde se concentra el trabajo del día a día, las cosas que están casi listas pero todavía no se lanzan a producción.
+
+Después están las ramas de apoyo, que nacen y mueren según se necesiten.
+
+`feature/*` se usa cuando vas a trabajar en algo nuevo. Nace de `develop` y cuando terminas, se fusiona de vuelta en `develop` y se elimina. Por ejemplo: `feature/add-search-bar` o `feature/new-form-user`.
+
+`release/*` se usa cuando ya tienes algo listo para lanzar y quieres hacer las pruebas finales antes de subirlo a producción. Nace de `develop` y se fusiona en `main` y `develop`. Por ejemplo: `release/v1.0.0`.
+
+`hotfix/*` es para emergencias: un bug en producción que hay que arreglar ya. Nace desde `main` (no desde `develop`, porque `develop` puede tener cosas inestables) y se fusiona en `main` y `develop`. Por ejemplo: `hotfix/login-authentication-error`.
+
+### Resumen rápido
+
+| Rama | Nace de | Muere en | Para qué |
+|---|---|---|---|
+| develop | main | nunca | trabajo del día a día |
+| feature/* | develop | develop | una tarea específica |
+| release/* | develop | main y develop | pulir la versión final |
+| hotfix/* | main | main y develop | arreglar algo en producción |
