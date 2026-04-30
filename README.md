@@ -300,7 +300,6 @@ git checkout -b rama_nueva
 
 Antes de hacer checkout a un commit viejo, asegurate de tener todo commiteado. Si tienes cambios sin guardar GIT no te va a dejar moverte. Tampoco conviene quedarse mucho tiempo en Detached HEAD haciendo cambios; si vas a trabajar en serio, mejor crea una rama desde el principio. Por otro lado, es una herramienta muy útil para estudiar proyectos grandes y ver cómo fueron creciendo commit a commit.
 
-
 ## Clase 5 - Ramas y GitFlow Básico
 
 ### Actualización del sistema de calificación
@@ -358,3 +357,62 @@ Después están las ramas de apoyo, que nacen y mueren según se necesiten.
 | feature/* | develop | develop | una tarea específica |
 | release/* | develop | main y develop | pulir la versión final |
 | hotfix/* | main | main y develop | arreglar algo en producción |
+
+## Clase 6 - Merge, Fetch, Pull, Push y Flujo de Trabajo
+
+### git merge
+
+Merge significa fusión. Este comando une dos ramas en una sola, combinando todos los commits de ambas. Se usa cuando ya terminaste de trabajar en una rama y quieres incorporar esos cambios a otra, por ejemplo de `feature/algo` hacia `develop`.
+
+Se recomienda siempre usar el flag `--no-ff` (no fast forward), que obliga a GIT a crear un commit de merge aunque no sea necesario. Esto sirve para que el historial conserve la trayectoria de la rama aunque después la borres.
+
+```bash
+git merge --no-ff <rama>
+```
+
+### git fetch
+
+`git fetch` revisa si hubo cambios en el repositorio remoto y sus ramas, pero sin traer nada todavía. Es como asomarse a ver si hay algo nuevo antes de descargarlo. Útil para saber si alguien más hizo cambios antes de ponerse a trabajar.
+
+```bash
+git fetch
+```
+
+### git pull
+
+`git pull` sí trae los cambios del repositorio remoto y los aplica en tu rama local. Siempre conviene usarlo con `origin` y el nombre de la rama para evitar problemas.
+
+```bash
+git pull origin <rama>
+```
+
+### git push
+
+`git push` sube tus commits locales al repositorio remoto. Igual que el pull, se usa con `origin` y el nombre de la rama.
+
+```bash
+git push origin <rama>
+```
+
+Si la rama que estás subiendo es nueva y no existe todavía en el remoto, la primera vez hay que usar el flag `-u` para que GIT la cree en el servidor:
+
+```bash
+git push origin -u <rama>
+```
+
+### Flujo de trabajo sin Pull Requests
+
+Este es el flujo que se usa para fusionar una rama de trabajo en `develop` de forma ordenada:
+
+```bash
+git checkout develop               # te mueves a develop
+git fetch                          # revisas si hubo cambios remotos
+git pull origin develop            # traes los cambios más recientes
+git merge --no-ff <rama>           # fusionas tu rama en develop
+# si hay conflictos, los resuelves manualmente en los archivos marcados
+git add .                          # añades los archivos resueltos
+git commit                         # abres el editor para el mensaje del merge commit
+# guardas con Ctrl+O, Enter, Ctrl+X si es nano, o :wq si es vim
+git branch -D <rama>               # borras la rama ya fusionada
+git push origin develop            # subes develop actualizado al remoto
+```
