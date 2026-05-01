@@ -505,3 +505,58 @@ git push -u origin docs/mi-cambio
 ```
 
 Finalmente desde GitHub abres un Pull Request desde tu fork hacia el repositorio original, y los dueños del proyecto deciden si lo aceptan o no.
+
+
+## Clase 8 - Git Diff, Stash y Resolución de Conflictos (Última clase)
+
+En esta última clase se resolvieron dudas prácticas sobre situaciones reales que pasan cuando se trabaja en equipo con GitFlow y PRs.
+
+### ¿Qué hacer cuando aprueban un PR que toca lo mismo que tú?
+
+Esto pasa cuando alguien más estaba trabajando en los mismos archivos o líneas que tú, y su PR se mergeó a develop antes que el tuyo. Tu rama queda desactualizada y cuando intentas hacer el PR van a aparecer conflictos. Para resolverlo:
+
+```bash
+git fetch                                        # traes los cambios remotos sin aplicarlos todavía
+git checkout feature/tu-rama                     # te aseguras de estar en tu rama
+git merge origin/develop                         # fusionas develop actualizado en tu rama
+# resuelves los conflictos manualmente en los archivos marcados
+git add .
+git commit -m "fix: Resuelve conflictos con develop"
+git push origin feature/tu-rama                  # subes tu rama actualizada
+```
+
+### Git Stash
+
+`git stash` guarda tus cambios temporalmente sin necesidad de hacer un commit. Es muy útil cuando necesitas cambiar de rama pero tienes cosas a medias, cuando hay conflictos que no quieres resolver en ese momento, o simplemente cuando quieres dejar el directorio limpio por un rato.
+
+```bash
+git stash                    # guarda los cambios y limpia el directorio de trabajo
+git stash -m "mensaje"       # lo mismo pero con un nombre descriptivo para encontrarlo después
+git stash list               # muestra todos los stashes guardados
+git stash pop                # aplica el stash más reciente y lo borra de la lista
+git stash apply              # aplica el stash más reciente pero lo deja guardado en la lista
+```
+
+### Git Diff
+
+`git diff` muestra qué cambió en el código entre el estado actual y algún punto de referencia. Sirve para revisar bien qué estás a punto de commitear antes de hacerlo.
+
+```bash
+git diff                         # cambios que todavía no están en stage
+git diff .                       # igual que el anterior pero sobre todo el directorio actual
+git diff <archivo>               # cambios de un archivo específico que no están en stage
+git diff --staged                # cambios que ya hiciste git add pero aún no commiteaste
+git diff --staged <archivo>      # lo mismo pero para un archivo específico
+git diff <rama1> <rama2>         # diferencias entre dos ramas
+```
+
+### Buenas prácticas al borrar una rama después del merge
+
+Una vez que el PR fue aprobado y mergeado a develop o main, la rama ya cumplió su propósito y conviene borrarla. Esto mantiene el repositorio limpio, evita confusiones con ramas viejas y hace más fácil entender qué está en desarrollo activamente.
+
+```bash
+git branch -D <rama>             # borras la rama localmente
+git push origin --delete <rama>  # borras la rama en el repositorio remoto
+```
+
+El momento correcto para hacerlo es justo después de que el PR fue mergeado exitosamente, siempre que esa rama no vaya a ser necesaria para algo más adelante.
