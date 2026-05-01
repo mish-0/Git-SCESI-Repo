@@ -416,3 +416,92 @@ git commit                         # abres el editor para el mensaje del merge c
 git branch -D <rama>               # borras la rama ya fusionada
 git push origin develop            # subes develop actualizado al remoto
 ```
+
+## Clase 7 - Pull Requests y Contribución Open Source
+
+### ¿Qué es un Pull Request?
+
+Un Pull Request (PR) es la forma profesional de proponer cambios en un repositorio. En vez de fusionar directamente tu rama al código base, creas una solicitud en GitHub donde el equipo puede ver exactamente qué cambios quieres meter, discutirlos, pedir modificaciones y aprobarlos o rechazarlos antes de que toquen el código principal.
+
+### ¿Por qué usar PRs si podemos trabajar sin ellos?
+
+Porque sin PRs cualquier colaborador puede pushear y mergear lo que quiera sin avisar a nadie. Eso es un riesgo enorme: ¿y si lo hace mal?, ¿y si está metiendo código malicioso?, ¿y si un colaborador de confianza resulta ser alguien con malas intenciones? Los PRs obligan al equipo a revisar los cambios antes de que entren al proyecto, permiten debatir, opinar, oponerse, y en general dan un mejor control sobre lo que se está poniendo en producción.
+
+### ¿Cómo crear un PR?
+
+Una vez que hiciste `git push origin <rama>`, vas a GitHub y seguís estos pasos:
+
+1. Entras a tu repositorio en GitHub y te mueves a tu rama.
+2. GitHub te va a mostrar un botón que dice "Compare & pull request", aparece en los primeros minutos después de subir cambios. Si no aparece, vas a "Contribute" → "Open Pull Request".
+3. En la pantalla que se abre, del lado izquierdo eliges la rama a la que quieres hacer merge (por ejemplo `develop` si estás con GitFlow), y del lado derecho está tu rama con los cambios.
+4. Pones un título descriptivo. Puedes dejar el del último commit o escribir uno propio que explique bien qué hiciste.
+5. En la descripción abajo puedes detallar qué cambios hiciste y por qué.
+6. GitHub te muestra los commits incluidos y una vista previa de cómo va a quedar el merge.
+7. Clickeas "Create Pull Request".
+8. A partir de ahí esperas a que tus compañeros revisen y aprueben. Una vez que se alcanza la cantidad de aprobaciones requeridas, aparece el botón "Merge Pull Request" y cualquiera de los aprobadores puede ejecutarlo.
+
+### ¿Cómo proteger el repositorio y limitar la colaboración?
+
+Saber de PRs no es suficiente si los colaboradores igual pueden mergear sin esperar aprobación. Para forzar que nadie pueda fusionar sin review, hay que configurar un ruleset en GitHub. Los pasos son:
+
+1. Vas a tu repositorio en GitHub → **Settings** → **Branches**.
+2. Clickeas en **Add branch ruleset** y le pones un nombre descriptivo, por ejemplo `pull-request-flow-ruleset`.
+3. En el estado lo dejas en **Active**.
+4. En **Target branches** agregas las ramas que querés proteger. Con GitFlow lo mínimo es proteger `main` y `develop`, porque son las ramas principales a las que nadie debería mergear directamente.
+5. En las reglas activás estas dos como mínimo: **Restrict updates** (evita problemas de actualizaciones directas) y **Require a pull request before merging** (obliga a que cualquier cambio pase por un PR antes de entrar a esas ramas).
+6. En **Bypass list** lo dejas vacío para que las reglas apliquen a todos, incluyendo al dueño del repo.
+7. En **Required approvals** ponés cuántas aprobaciones se necesitan para poder mergear. Se recomienda la mitad más uno del equipo. Si son 4 integrantes, pones 3.
+8. Activas también la opción que obliga a re-aprobar si alguien hace un push de último momento después de que el PR ya fue aprobado, para que no puedan meter cambios a escondidas justo antes del merge.
+9. Guardas con **Save changes** y listo.
+
+### Flujo de trabajo con Pull Requests
+
+```bash
+git checkout develop
+git fetch
+git pull origin develop
+git checkout <rama>              # agregas -b si estás creando la rama
+git merge develop               # solo si hubo cambios en develop mientras trabajabas
+
+# trabajas en tu rama, haces tus commits...
+
+git push origin <rama>          # agregas -u si es la primera vez que subes esa rama
+
+# antes de abrir la PR, actualizas tu rama por si develop tuvo cambios nuevos:
+git checkout develop
+git fetch
+git checkout <rama>
+git merge develop               # resuelves conflictos si los hay
+git add .
+git commit                      # guardas con Ctrl+O, Enter, Ctrl+X (nano) o :wq (vim)
+git push origin <rama>
+
+# ahora sí abres la PR desde GitHub siguiendo el flujo del video
+```
+
+### ¿Cómo contribuir a un proyecto sin ser colaborador invitado?
+
+Esto se hace a través de un Fork. André lo demostró en clase contribuyendo a un repositorio donde no estaba invitado. El proceso es:
+
+Primero haces un fork del repositorio desde GitHub, lo que crea una copia del repo en tu propia cuenta. Después lo clonas a tu computadora:
+
+```bash
+git clone https://github.com/tu-usuario/nombre-repo.git
+cd nombre-repo
+```
+
+Creas una rama para tu cambio, nunca trabajas directo en main:
+
+```bash
+git checkout -b docs/mi-cambio
+```
+
+Haces tus modificaciones, las commiteas y las subes a tu fork:
+
+```bash
+git add .
+git commit -m "docs: descripción del cambio"
+git push -u origin docs/mi-cambio
+```
+
+Finalmente desde GitHub abres un Pull Request desde tu fork hacia el repositorio original, y los dueños del proyecto deciden si lo aceptan o no.
